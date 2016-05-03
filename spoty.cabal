@@ -43,6 +43,7 @@ library
                        bytestring,
                        lens,
                        lens-aeson,
+                       logging-facade,
                        pipes,
                        text,
                        unordered-containers,

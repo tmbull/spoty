@@ -23,6 +23,7 @@ import qualified Data.ByteString.Lazy.Char8 as BL
 import           Data.Maybe (fromMaybe)
 import           Data.Monoid ((<>))
 import qualified Data.Text as T
+import qualified System.Logging.Facade as Log
 import qualified Network.Wreq as W
 import qualified Pipes as P
 import qualified Pipes.Prelude as P
@@ -165,5 +166,7 @@ fetchWith opts path' =
 
 -- | Fetch a path with the given HTTP options and return the raw response.
 grab :: W.Options -> T.Text -> IO (W.Response BL.ByteString)
-grab opts path' =
-  W.getWith opts $ baseURL <> versionURL <> T.unpack path'
+grab opts path' = do
+  let url = baseURL <> versionURL <> T.unpack path'
+  Log.info $ "Spoty grabbing URL: " ++ url
+  W.getWith opts url
