@@ -85,7 +85,8 @@ makeProducer predicate opts url = go 0
 
     let f = fromMaybe (fmap (^. W.responseBody) . W.asJSON) predicate
     (chunk :: Paging b) <- P.liftIO $ f reply
-
+    P.liftIO $ Log.info $ "Response URL: " ++ show (chunk ^. href)
+    
     mapM_ P.yield $ chunk ^. items
 
     let delta = length $ chunk ^. items
@@ -121,11 +122,11 @@ getUser :: T.Text -> IO User
 getUser = fetch . build "users"
 
 -- | Search for some string in the given categories.
-search :: [SearchCategory] -> T.Text -> (P.Producer Artist IO (), P.Producer Album IO (), P.Producer Track IO ())
-search cats term = (extract SearchArtist, extract SearchAlbum, extract SearchTrack)
+search :: [SearchCategory] -> [T.Text] -> (P.Producer Artist IO (), P.Producer Album IO (), P.Producer Track IO ())
+search cats terms = (extract SearchArtist, extract SearchAlbum, extract SearchTrack)
   where
   opts = W.defaults
-         & W.param "q" .~ [term]
+         & W.param "q" .~ terms
          & W.param "type" .~ [T.intercalate "," $ map (T.pack . show) cats]
 
   pluralize = T.pack . (<> "s") . show
@@ -136,15 +137,15 @@ search cats term = (extract SearchArtist, extract SearchAlbum, extract SearchTra
     Nothing  -> throw . W.JSONError $ "Unexpected search result, got: " <> show reply
 
 -- | Search for artists.
-searchArtist :: T.Text -> P.Producer Artist IO ()
+searchArtist :: [T.Text] -> P.Producer Artist IO ()
 searchArtist = (^. _1) . search [SearchArtist]
 
 -- | Search for albums.
-searchAlbum :: T.Text -> P.Producer Album IO ()
+searchAlbum :: [T.Text] -> P.Producer Album IO ()
 searchAlbum = (^. _2) . search [SearchAlbum]
 
 -- | Search for tracks.
-searchTrack :: T.Text -> P.Producer Track IO ()
+searchTrack :: [T.Text] -> P.Producer Track IO ()
 searchTrack = (^. _3) . search [SearchTrack]
 
 -- | Fetch one element from the producer and discard the rest.
