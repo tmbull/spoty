@@ -126,7 +126,7 @@ search :: [SearchCategory] -> [T.Text] -> (P.Producer Artist IO (), P.Producer 
 search cats terms = (extract SearchArtist, extract SearchAlbum, extract SearchTrack)
   where
   opts = W.defaults
-         & W.param "q" .~ terms
+         & W.param "q" .~ [T.intercalate " " terms]
          & W.param "type" .~ [T.intercalate "," $ map (T.pack . show) cats]
 
   pluralize = T.pack . (<> "s") . show
